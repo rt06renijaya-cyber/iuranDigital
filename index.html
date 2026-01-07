@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Input Iuran Warga</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --green-dark: #0f3d2e;
+      --green: #1f5c45;
+      --blue: #2f6fa5;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --border: #e3e7e5;
+      --danger: #c62828;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      padding: 16px;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: auto;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header img {
+      width: 80px;
+      margin-bottom: 6px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .canvas-box {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    canvas {
+      width: 100%;
+      height: 120px;
+      border-radius: 8px;
+      background: #fafafa;
+      touch-action: none;
+    }
+
+    .btn-clear {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--danger);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <img src="1767412017311.png">
+    <h1>Input Iuran Warga</h1>
+    <small>Gang Mawar</small>
+  </div>
+
+  <!-- FORM -->
+  <div class="section">
+
+    <label>Nama Warga</label>
+    <select id="idWarga">
+      <option value="">Memuat data warga...</option>
+    </select>
+
+
+    <label>Bulan Iuran</label>
+    <input type="month">
+
+    <label>Nominal (Rp)</label>
+    <input type="number" placeholder="20000">
+
+  </div>
+
+  <!-- TTD WARGA -->
+  <div class="section">
+    <label>Tanda Tangan Warga</label>
+    <div class="canvas-box">
+      <canvas id="ttdWarga"></canvas>
+      <button class="btn-clear" onclick="clearCanvas('ttdWarga')">Hapus</button>
+    </div>
+  </div>
+
+  <!-- TTD KOLEKTOR -->
+  <div class="section">
+    <label>Tanda Tangan Kolektor</label>
+    <div class="canvas-box">
+      <canvas id="ttdKolektor"></canvas>
+      <button class="btn-clear" onclick="clearCanvas('ttdKolektor')">Hapus</button>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="section">
+    <button type="button" class="submit" onclick="submitForm()">SIMPAN IURAN</button>
+  </div>
+
+</div>
+
+<script>
+/* ================== CANVAS ================== */
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  canvas.addEventListener('pointerdown', e => {
+    drawing = true;
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  });
+
+  canvas.addEventListener('pointerup', () => drawing = false);
+  canvas.addEventListener('pointerleave', () => drawing = false);
+}
+
+function clearCanvas(id) {
+  const c = document.getElementById(id);
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+
+setupCanvas('ttdWarga');
+setupCanvas('ttdKolektor');
+
+const canvasWarga = document.getElementById('ttdWarga');
+const canvasKolektor = document.getElementById('ttdKolektor');
+
+/* ================== SUBMIT ================== */
+function submitForm() {
+  const idWarga = document.getElementById('idWarga').value;
+  const bulan = document.querySelector('input[type=month]').value;
+  const nominal = document.querySelector('input[type=number]').value;
+  const idKolektor = 'K01';
+
+  if (!idWarga || !bulan || !nominal) {
+    alert('Lengkapi data terlebih dahulu');
+    return;
+  }
+
+  const payload = {
+    idWarga,
+    bulan,
+    nominal,
+    idKolektor,
+    ttdWarga: canvasWarga.toDataURL('image/png'),
+    ttdKolektor: canvasKolektor.toDataURL('image/png')
+  };
+
+  fetch('https://script.google.com/macros/s/AKfycbxX15j_OLQVcsbJowFOj7gaTVxUuXK3S-r9o2AKDnJZbB4ty8vPoxFIcGGttmqGF3Ozkw/exec', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  alert('✅ Iuran berhasil disimpan');
+  clearCanvas('ttdWarga');
+  clearCanvas('ttdKolektor');
+}
+
+/* ================== LOAD WARGA ================== */
+const GANG_AKTIF = 'G01';
+
+function loadWarga() {
+  const select = document.getElementById('idWarga');
+  select.innerHTML = '<option>Loading...</option>';
+
+  fetch(
+    'https://script.google.com/macros/s/AKfycbxX15j_OLQVcsbJowFOj7gaTVxUuXK3S-r9o2AKDnJZbB4ty8vPoxFIcGGttmqGF3Ozkw/exec?action=warga&gang=' + GANG_AKTIF
+  )
+    .then(res => res.json())
+    .then(data => {
+      select.innerHTML = '<option value="">-- Pilih Warga --</option>';
+      data.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = w.nama;
+        select.appendChild(opt);
+      });
+    })
+    .catch(() => {
+      select.innerHTML = '<option>Gagal load data</option>';
+    });
+}
+
+loadWarga();
+</script>
+
+
+</body>
+</html>
